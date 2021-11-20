@@ -14,7 +14,7 @@
       "launchBrowser": true,
       "applicationUrl": "https://localhost:7135;http://localhost:5121",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "TestEnvironment"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "IIS Express": {
