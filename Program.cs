@@ -1,13 +1,15 @@
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
+builder.Services.AddDbContext<TodoDb>(options => options.UseInMemoryDatabase("items"));
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Todo API", Description = "Keep track of your todos", Version = "v1" });
 });
-
 
 var app = builder.Build();
 
@@ -17,49 +19,62 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo API V1");
 });
 
-if (app.Environment.IsDevelopment())
+app.MapGet("/todos", async (TodoDb db) => await db.TodoItems.ToListAsync());
+
+app.MapGet("/todos/{id:int}", async (TodoDb db, int id) => await db.TodoItems.FindAsync(id));
+
+app.MapPut("/todos/{id:int}", async (TodoDb db, TodoItem updateTodo, int id, HttpResponse http) =>
 {
-    app.MapGet("/OnlyInDev",
-        () => "This can only be accessed when the app is running in development.");
-}
+    var todo = await db.TodoItems.FindAsync(id);
 
-if (app.Environment.EnvironmentName == "TestEnvironment")
+    if (todo == null) return Results.NotFound();
+
+    todo.Item = updateTodo.Item;
+    todo.Completed = updateTodo.Completed;
+
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+
+app.MapDelete("/todos/{id:int}", async (TodoDb db, int id) =>
 {
-    app.MapGet("/OnlyInTestEnvironment", () => "TestEnvironment");
-}
+    var todo = await db.TodoItems.FindAsync(id);
+    if (todo == null) return Results.NotFound();
+    db.TodoItems.Remove(todo);
+    await db.SaveChangesAsync();
 
-//app.MapGet("/", () => "Hello World!");
+    return Results.Ok();
 
-// add another route
-app.MapGet("/todos", () => new { TodoItem = "Learn about routing", Completed = false });
-
-// route variables
-app.MapGet("/hello/{name}", (string name) => $"Hi, {name}");
-
-// another way to access route values
-app.MapGet("/greetings/{name}", (HttpContext ctx) => $"Hello, {ctx.Request.RouteValues["name"]}");
-
-// specify variable type - add constraint
-// used for disambiguate similar routes, not for input validation
-// returns 404 if not match the type
-app.MapGet("/todos/{id:int}", (int id) => $"Todo id: {id}");
-app.MapGet("/todos/{active:bool}", (bool active) => $"Todo is active: {active}");
-app.MapGet("/todos/{name}", (string name) => $"Todo name: {name}");
+});
 
 
-// error handling
-app.MapGet("/dobad", () => int.Parse("this is not an int"));
-
-app.MapPost("/todos", (Todo todo) => todo.Name);
+app.MapPost("/todos", async (TodoDb db, TodoItem todo) =>
+{
+    await db.TodoItems.AddAsync(todo);
+    await db.SaveChangesAsync();
+    return Results.Created($"/todos/{todo.Id}", todo);
+});
 
 // add razor page to render HTML
 app.MapRazorPages();
 
 app.Run();
 
-internal class Todo
+internal class TodoItem
 {
-    public string Name { get; set; }
+    public string Item { get; set; }
     public int Id { get; set; }
     public bool Completed { get; set; }
+}
+
+class TodoDb: DbContext
+{
+    public TodoDb(DbContextOptions options): base(options) { }
+    public DbSet<TodoItem> TodoItems { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.UseInMemoryDatabase("Todos");
+    }
 }
