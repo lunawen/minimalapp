@@ -27,4 +27,7 @@ app.MapGet("/todos/{id:int}", (int id) => $"Todo id: {id}");
 app.MapGet("/todos/{active:bool}", (bool active) => $"Todo is active: {active}");
 app.MapGet("/todos/{name}", (string name) => $"Todo name: {name}");
 
+// error handling
+app.MapGet("/dobad", () => int.Parse("this is not an int"));
+
 app.Run();
