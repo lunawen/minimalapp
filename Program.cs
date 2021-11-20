@@ -30,4 +30,13 @@ app.MapGet("/todos/{name}", (string name) => $"Todo name: {name}");
 // error handling
 app.MapGet("/dobad", () => int.Parse("this is not an int"));
 
+app.MapPost("/todos", (Todo todo) => todo.Name);
+
 app.Run();
+
+internal class Todo
+{
+    public string Name { get; set; }
+    public int Id { get; set; }
+    public bool Completed { get; set; }
+}
