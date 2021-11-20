@@ -1,6 +1,17 @@
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.MapGet("/OnlyInDev",
+        () => "This can only be accessed when the app is running in development.");
+}
+
+if (app.Environment.EnvironmentName == "TestEnvironment")
+{
+    app.MapGet("/OnlyInTestEnvironment", () => "TestEnvironment");
+}
+
 app.MapGet("/", () => "Hello World!");
 
 // add another route
