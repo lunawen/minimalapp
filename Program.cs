@@ -3,7 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
-builder.Services.AddDbContext<TodoDb>(options => options.UseInMemoryDatabase("items"));
+var connectionString = builder.Configuration.GetConnectionString("TodoDb");
+builder.Services.AddSqlServer<TodoDb>(connectionString);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -23,7 +24,7 @@ app.MapGet("/todos", async (TodoDb db) => await db.TodoItems.ToListAsync());
 
 app.MapGet("/todos/{id:int}", async (TodoDb db, int id) => await db.TodoItems.FindAsync(id));
 
-app.MapPut("/todos/{id:int}", async (TodoDb db, TodoItem updateTodo, int id, HttpResponse http) =>
+app.MapPut("/todos/{id:int}", async (TodoDb db, TodoItem updateTodo, int id) =>
 {
     var todo = await db.TodoItems.FindAsync(id);
 
@@ -66,6 +67,11 @@ internal class TodoItem
     public string Item { get; set; }
     public int Id { get; set; }
     public bool Completed { get; set; }
+
+    public TodoItem(string Item)
+    {
+        this.Item = Item;
+    }
 }
 
 class TodoDb: DbContext
@@ -75,6 +81,6 @@ class TodoDb: DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseInMemoryDatabase("Todos");
+        optionsBuilder.UseSqlServer();
     }
 }
