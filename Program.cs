@@ -1,4 +1,5 @@
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddRazorPages();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -12,7 +13,7 @@ if (app.Environment.EnvironmentName == "TestEnvironment")
     app.MapGet("/OnlyInTestEnvironment", () => "TestEnvironment");
 }
 
-app.MapGet("/", () => "Hello World!");
+//app.MapGet("/", () => "Hello World!");
 
 // add another route
 app.MapGet("/todos", () => new { TodoItem = "Learn about routing", Completed = false });
@@ -36,7 +37,8 @@ app.MapGet("/dobad", () => int.Parse("this is not an int"));
 
 app.MapPost("/todos", (Todo todo) => todo.Name);
 
-
+// add razor page to render HTML
+app.MapRazorPages();
 
 app.Run();
 
