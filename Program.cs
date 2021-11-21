@@ -3,7 +3,11 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
+
+// change this part to use different DbContext
+//builder.Services.AddDbContext<TodoDb>(options => options.UseInMemoryDatabase("Todos"));
 var connectionString = builder.Configuration.GetConnectionString("TodoDb");
+//builder.Services.AddSqlite<TodoDb>(connectionString);
 builder.Services.AddSqlServer<TodoDb>(connectionString);
 
 // swagger related
@@ -22,6 +26,7 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo API V1");
 });
 
+// HTTP endpoints
 app.MapGet("/todos", async (TodoDb db) => await db.TodoItems.ToListAsync());
 
 app.MapGet("/todos/{id:int}", async (TodoDb db, int id) => await db.TodoItems.FindAsync(id));
@@ -51,7 +56,6 @@ app.MapDelete("/todos/{id:int}", async (TodoDb db, int id) =>
 
 });
 
-
 app.MapPost("/todos", async (TodoDb db, TodoItem todo) =>
 {
     await db.TodoItems.AddAsync(todo);
@@ -64,6 +68,7 @@ app.MapRazorPages();
 
 app.Run();
 
+// Model
 internal class TodoItem
 {
     public string Item { get; set; }
@@ -76,6 +81,7 @@ internal class TodoItem
     }
 }
 
+// Db
 class TodoDb: DbContext
 {
     public TodoDb(DbContextOptions options): base(options) { }
@@ -83,6 +89,10 @@ class TodoDb: DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
+        // change this part to use different DbContext
+        //optionsBuilder.UseInMemoryDatabase("Todos");
+        //optionsBuilder.UseSqlite();
         optionsBuilder.UseSqlServer();
+
     }
 }
