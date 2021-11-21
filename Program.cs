@@ -6,6 +6,7 @@ builder.Services.AddRazorPages();
 var connectionString = builder.Configuration.GetConnectionString("TodoDb");
 builder.Services.AddSqlServer<TodoDb>(connectionString);
 
+// swagger related
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -14,6 +15,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// swagger middleware
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
